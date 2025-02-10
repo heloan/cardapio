@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Marmitex</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerador de Cardápio de Marmitex</h1>
+    <form id="cardapioForm">
+        <label for="titulo">Título do Cardápio:</label>
+        <input type="text" id="titulo" placeholder="Digite o título" /><br><br>
+        
+        <label for="valor">Valor da Marmitex:</label>
+        <input type="text" id="valor" placeholder="Digite o valor" /><br><br>
+        
+        <label>Carnes (máx. 6):</label><br>
+        <div id="carnesContainer"></div>
+        <button type="button" onclick="adicionarOpcao('carnesContainer', 'carne')">Adicionar Carne</button><br><br>
+        
+        <label>Acompanhamentos (máx. 6):</label><br>
+        <div id="acompanhamentosContainer"></div>
+        <button type="button" onclick="adicionarOpcao('acompanhamentosContainer', 'acompanhamento')">Adicionar Acompanhamento</button><br><br>
+        
+        <button type="button" onclick="gerarCardapio()">Gerar Cardápio</button>
+        <button type="button" onclick="baixarImagem()">Baixar Imagem</button>
+    </form>
+    
+    <!-- Canvas quadrado (400x400) -->
+    <canvas id="cardapioCanvas" width="400" height="400"></canvas>
+    
+    <script>
+        function adicionarOpcao(containerId, type) {
+            const container = document.getElementById(containerId);
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "Digite uma opção";
+            container.appendChild(input);
+            container.appendChild(document.createElement("br"));
+        }
+
+        function gerarCardapio() {
+            const canvas = document.getElementById("cardapioCanvas");
+            const ctx = canvas.getContext("2d");
+            const backgroundUrl = "img.jpg"; // URL da imagem quadrada
+            const titulo = document.getElementById("titulo").value || "Cardápio Marmitex";
+            const valor = document.getElementById("valor").value || "R$ 15,00";
+            
+            const carnes = Array.from(document.getElementById("carnesContainer").children)
+                .filter(el => el.tagName === "INPUT" && el.value.trim() !== "")
+                .map(el => el.value.trim());
+            
+            const acompanhamentos = Array.from(document.getElementById("acompanhamentosContainer").children)
+                .filter(el => el.tagName === "INPUT" && el.value.trim() !== "")
+                .map(el => el.value.trim());
+
+            const background = new Image();
+            background.src = backgroundUrl;
+            background.onload = function () {
+                ctx.drawImage(background, 0, 0, canvas.width, canvas.height); // Redimensiona a imagem para o tamanho do canvas
+                desenharCardapio(ctx, titulo, carnes, acompanhamentos, valor);
+            };
+        }
+
+        function desenharCardapio(ctx, titulo, carnes, acompanhamentos, valor) {
+            const canvas = document.getElementById("cardapioCanvas");
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(10, 10, 380, 380); // Ajuste para o novo tamanho do canvas
+            
+            ctx.fillStyle = "white";
+            ctx.font = "20px Poppins";
+            ctx.textAlign = "center";
+            ctx.fillText("Cardápio do dia", canvas.width / 2, 50);
+            ctx.fillText(titulo, canvas.width / 2, 80);
+            
+            ctx.font = "16px Poppins";
+            ctx.textAlign = "left";
+
+            ctx.fillText("Opções de Carnes:", 25, 120);
+            desenharTextoQuebrado(ctx, carnes, 25, 150, 150);
+
+            ctx.fillText("Acompanhamentos:", 210, 120);
+            desenharTextoQuebrado(ctx, acompanhamentos, 210, 150, 150);
+
+            ctx.strokeStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(190, 110);
+            ctx.lineTo(190, 330);
+            ctx.stroke();
+
+            ctx.font = "18px Poppins";
+            ctx.textAlign = "center";
+            ctx.fillText("Valor: " + valor, canvas.width / 2, 355);
+
+            ctx.font = "16px Poppins";
+            ctx.textAlign = "left";
+            ctx.fillText("(35) 99117-0797", 20, 380);
+            ctx.textAlign = "left";
+            ctx.fillText(new Date().toLocaleDateString(), 290, 380);
+        }
+
+        function desenharTextoQuebrado(ctx, lista, x, y, larguraMaxima) {
+            lista.forEach(texto => {
+                const palavras = texto.split(" ");
+                let linha = "";
+                palavras.forEach((palavra, index) => {
+                    const larguraTeste = ctx.measureText(linha + " " + palavra).width;
+                    if (larguraTeste > larguraMaxima) {
+                        ctx.fillText(linha, x, y);
+                        y += 20;
+                        linha = palavra;
+                    } else {
+                        linha += (linha ? " " : "") + palavra;
+                    }
+                    if(index == 0) linha = "- " + linha;
+                });
+                ctx.fillText(linha, x, y);
+                y += 20;
+            });
+        }
+
+        function baixarImagem() {
+		    const canvas = document.getElementById("cardapioCanvas");
+		    if (!canvas) {
+		        console.error("Canvas não encontrado!");
+		        return;
+		    }
+
+		    // Cria um link para download
+		    const link = document.createElement("a");
+		    link.download = "cardapio.png"; // Nome do arquivo para download
+		    link.href = canvas.toDataURL("image/png"); // Converte o canvas para uma imagem PNG
+		    link.click(); // Dispara o download
+		}
+    </script>
+</body>
+</html>
